@@ -24,11 +24,39 @@ DWORD MyGetProcessId(LPCTSTR ProcessName) // non-conflicting function name
 	return 0;
 }
 
-int main()
+int main(int argc, char **argv)
 {
+	if (argc > 1 && strncmp(argv[1], "-h", 2) == 0)
+	{
+		puts("Usage: DLL_Inject.exe [-i InjectedDLL] [-t targetProcessName]");
+		return 0;
+	}
+
 	LPCSTR DllPath = "C:\\temp\\boom.dll"; // The Path to our DLL
 
-	DWORD procID = MyGetProcessId(L"notepad++.exe"); // A 32-bit unsigned integer, DWORDS are mostly used to store Hexadecimal Addresses
+	if (argc > 2 && strncmp(argv[1], "-i", 2) == 0)
+	{
+		DllPath = argv[2];
+	} else if (argc > 4 && strncmp(argv[3], "-i", 2) == 0)
+	{
+		DllPath = argv[4];
+	}
+	cout << "source dll: " << DllPath << endl;
+
+	const wchar_t *procName = L"notepad++.exe";
+
+	LPWSTR cliW = GetCommandLineW();
+	LPWSTR *wargv = CommandLineToArgvW(cliW, &argc);
+	if (argc > 2 && strncmp(argv[1], "-t", 2) == 0)
+	{
+		procName = wargv[2];
+	} else if (argc > 4 && strncmp(argv[3], "-t", 2) == 0)
+	{
+		procName = wargv[4];
+	}
+	wcout << "injecting into: " << procName << endl;
+
+	DWORD procID = MyGetProcessId(procName); // A 32-bit unsigned integer, DWORDS are mostly used to store Hexadecimal Addresses
 	HANDLE handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, procID); // Opening the Process with All Access
 
 	// Allocate memory for the dllpath in the target process, length of the path string + null terminator
